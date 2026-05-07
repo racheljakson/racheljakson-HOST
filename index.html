@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="HOST"/>
+<title>HOST</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f6f4;color:#1a1916;max-width:430px;margin:0 auto;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+#app{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen{display:none;min-height:100%}
+.screen.active{display:block}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;background:#fff;border-bottom:1px solid #e8e6e1;position:sticky;top:0;z-index:10}
+.topbar-title{font-weight:600;font-size:16px;letter-spacing:-0.3px}
+.back-btn{background:none;border:none;font-size:18px;cursor:pointer;color:#1a1916;padding:0;line-height:1}
+.btn{border:none;border-radius:8px;cursor:pointer;font-weight:500;padding:12px 20px;font-size:13px;letter-spacing:0.1px}
+.btn-primary{background:#1a1916;color:#fff}
+.btn-outline{background:transparent;color:#1a1916;border:1px solid #e8e6e1}
+.btn-ghost{background:#f0efe8;color:#1a1916}
+.btn-sm{padding:7px 14px;font-size:12px}
+.btn-full{width:100%}
+.card{background:#fff;border-radius:12px;border:1px solid #e8e6e1;overflow:hidden}
+.divider{height:1px;background:#e8e6e1;margin:4px 0}
+.tag{background:#eceae4;color:#5a5852;font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;display:inline-block}
+.section-label{font-size:11px;font-weight:600;letter-spacing:1.5px;color:#9a9690;text-transform:uppercase;margin-bottom:12px}
+input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #e8e6e1;font-size:13px;background:#f7f6f4;color:#1a1916;font-family:inherit}
+input:focus{outline:none;border-color:#1a1916}
+
+/* Home */
+.home-hero{padding:36px 20px 28px;background:#fff;border-bottom:1px solid #e8e6e1}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px}
+.home-card{background:#fff;border-radius:12px;border:1px solid #e8e6e1;padding:18px 14px;cursor:pointer}
+.home-card-title{font-weight:600;font-size:14px;margin-bottom:3px}
+.home-card-sub{font-size:12px;color:#9a9690}
+.recent-item{padding:14px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+
+/* Stats row */
+.stats-row{display:flex;background:#fff;border-bottom:1px solid #e8e6e1;padding:14px 20px}
+.stat{flex:1;text-align:center;border-left:1px solid #e8e6e1}
+.stat:first-child{border-left:none}
+.stat-val{font-weight:600;font-size:16px}
+.stat-label{font-size:11px;color:#9a9690;margin-top:2px}
+
+/* Discover */
+.cat-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:12px;scrollbar-width:none}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-btn{background:transparent;color:#9a9690;border:1px solid #e8e6e1;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit}
+.cat-btn.active{background:#1a1916;color:#fff;border-color:#1a1916}
+.inspo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inspo-card{background:#fff;border-radius:12px;border:1px solid #e8e6e1;overflow:hidden;cursor:pointer}
+.inspo-swatch{height:90px;display:flex}
+.inspo-swatch div{flex:1}
+.inspo-body{padding:10px 10px 12px}
+.inspo-title{font-weight:600;font-size:12px;margin-bottom:1px}
+.inspo-cat{font-size:10px;color:#9a9690;margin-bottom:8px}
+.save-btn{width:100%;background:transparent;border:1px solid #e8e6e1;border-radius:6px;padding:5px 0;cursor:pointer;font-size:11px;color:#9a9690;font-weight:500;font-family:inherit}
+.save-btn.saved{background:#1a1916;color:#fff;border-color:#1a1916}
+
+/* Room preview */
+.room-upload{background:#fff;border-radius:12px;border:1px solid #e8e6e1;padding:28px;text-align:center}
+.room-icon{width:48px;height:48px;border-radius:12px;background:#f0efe8;margin:0 auto 16px;display:flex;align-items:center;justify-content:center}
+.upload-label{display:inline-block;background:#1a1916;color:#fff;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500}
+
+/* Preview */
+.preview-canvas{margin:20px;border-radius:12px;border:1px solid #e8e6e1;background:#fff;height:180px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.placed-badge{position:absolute;top:10px;right:10px;background:#1a1916;color:#fff;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600}
+.placed-tags{position:absolute;bottom:10px;left:10px;display:flex;gap:6px;flex-wrap:wrap}
+.placed-tag{background:#f0efe8;color:#1a1916;font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid #e8e6e1}
+.item-row{padding:13px 16px;display:flex;align-items:center;gap:12px}
+.item-name{font-weight:500;font-size:13px}
+.item-sub{font-size:11px;color:#9a9690;margin-top:2px}
+.place-btn{background:transparent;color:#1a1916;border:1px solid #e8e6e1;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:500;cursor:pointer;flex-shrink:0;font-family:inherit}
+.place-btn.placed{background:#1a1916;color:#fff;border-color:#1a1916}
+
+/* Budget */
+.budget-bar{height:4px;background:#f0efe8;border-radius:4px;overflow:hidden;margin-bottom:8px}
+.budget-fill{height:100%;border-radius:4px;transition:width .3s}
+.check-btn{width:20px;height:20px;border-radius:5px;border:1.5px solid #e8e6e1;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.check-btn.done{background:#3d6b4f;border-color:#3d6b4f}
+
+/* Bottom nav */
+#bottom-nav{display:flex;background:#fff;border-top:1px solid #e8e6e1;padding:10px 0 8px;flex-shrink:0}
+.nav-btn{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:#9a9690;font-family:inherit}
+.nav-btn.active{color:#1a1916}
+.nav-btn svg{width:18px;height:18px}
+.nav-label{font-size:10px;font-weight:400}
+.nav-btn.active .nav-label{font-weight:600}
+.price{font-weight:600;font-size:13px;color:#3d6b4f}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="home-hero">
+    <div style="font-size:11px;font-weight:600;letter-spacing:2px;color:#9a9690;margin-bottom:6px;text-transform:uppercase">Welcome back</div>
+    <div style="font-size:26px;font-weight:700;letter-spacing:-1px">HOST</div>
+    <div style="font-size:13px;color:#9a9690;margin-top:4px">The first step to together.</div>
+  </div>
+  <div style="padding:24px 20px 0">
+    <div class="section-label">Start</div>
+    <div class="home-grid">
+      <div class="home-card" onclick="nav('discover')"><div class="home-card-title">Discover</div><div class="home-card-sub">Browse inspiration</div></div>
+      <div class="home-card" onclick="nav('wishlists')"><div class="home-card-title">Wishlists</div><div class="home-card-sub">Build your vision</div></div>
+      <div class="home-card" onclick="nav('room')"><div class="home-card-title">Upload Room</div><div class="home-card-sub">Style your space</div></div>
+      <div class="home-card" onclick="nav('moodboard')"><div class="home-card-title">Mood Board</div><div class="home-card-sub" id="home-saved-count">0 saved looks</div></div>
+    </div>
+    <div class="section-label">Recent</div>
+    <div class="recent-item" onclick="openList(0)">
+      <div><div style="font-weight:500;font-size:14px">Summer Garden Party</div><div style="font-size:12px;color:#9a9690;margin-top:2px">4 items · June 15</div></div>
+      <span style="color:#9a9690;font-size:16px">›</span>
+    </div>
+    <div class="divider"></div>
+    <div class="recent-item" onclick="openList(1)">
+      <div><div style="font-weight:500;font-size:14px">Holiday Dinner</div><div style="font-size:12px;color:#9a9690;margin-top:2px">3 items · Dec 20</div></div>
+      <span style="color:#9a9690;font-size:16px">›</span>
+    </div>
+  </div>
+</div>
+
+<!-- DISCOVER -->
+<div class="screen" id="screen-discover">
+  <div style="padding:24px 20px 16px;background:#fff;border-bottom:1px solid #e8e6e1;position:sticky;top:0;z-index:10">
+    <div class="section-label">Browse</div>
+    <div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:2px">Discover</div>
+    <div style="font-size:13px;color:#9a9690">Find inspiration for your next event.</div>
+  </div>
+  <div style="padding:14px 20px 0;background:#fff;border-bottom:1px solid #e8e6e1;position:sticky;top:88px;z-index:9">
+    <div class="cat-scroll" id="cat-scroll"></div>
+  </div>
+  <div style="padding:16px 20px">
+    <div id="moodboard-shortcut" style="display:none;background:#fff;border-radius:12px;border:1px solid #e8e6e1;padding:13px 16px;margin-bottom:16px;display:none;justify-content:space-between;align-items:center;cursor:pointer" onclick="nav('moodboard')">
+      <div><div style="font-weight:600;font-size:13px">My Mood Board</div><div style="font-size:12px;color:#9a9690;margin-top:1px" id="shortcut-count"></div></div>
+      <span style="color:#9a9690;font-size:16px">›</span>
+    </div>
+    <div class="inspo-grid" id="inspo-grid"></div>
+  </div>
+</div>
+
+<!-- MOOD BOARD -->
+<div class="screen" id="screen-moodboard">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="nav('discover')">←</button>
+      <span class="topbar-title">My Mood Board</span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="nav('wishlists')">Add to Wishlist</button>
+  </div>
+  <div style="padding:20px" id="moodboard-content"></div>
+</div>
+
+<!-- WISHLISTS -->
+<div class="screen" id="screen-wishlists">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="nav('home')">←</button>
+      <span class="topbar-title">Wishlists</span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="showNewList()">+ New</button>
+  </div>
+  <div style="padding:16px 20px">
+    <div id="new-list-form" style="display:none;background:#fff;border-radius:12px;border:1px solid #e8e6e1;padding:16px;margin-bottom:14px">
+      <div class="section-label">New Wishlist</div>
+      <input id="new-list-input" placeholder="e.g. Birthday Dinner" style="margin-bottom:10px"/>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="createList()">Create</button>
+        <button class="btn btn-outline btn-sm" onclick="hideNewList()">Cancel</button>
+      </div>
+    </div>
+    <div class="card" id="wishlists-container"></div>
+  </div>
+</div>
+
+<!-- WISHLIST DETAIL -->
+<div class="screen" id="screen-wishlist-detail">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="nav('wishlists')">←</button>
+      <span class="topbar-title" id="detail-title"></span>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="nav('room')">Use in Room</button>
+  </div>
+  <div class="stats-row" id="detail-stats"></div>
+  <div style="padding:16px 20px">
+    <button class="btn btn-outline btn-full" style="margin-bottom:12px" onclick="showAddItem()">+ Add Item</button>
+    <div id="add-item-form" style="display:none;background:#fff;border-radius:12px;border:1px solid #e8e6e1;padding:16px;margin-bottom:12px">
+      <div class="section-label">New Item</div>
+      <input id="item-name" placeholder="Item name" style="margin-bottom:8px"/>
+      <input id="item-price" type="number" placeholder="Price ($)" style="margin-bottom:8px"/>
+      <input id="item-store" placeholder="Store / Retailer" style="margin-bottom:8px"/>
+      <input id="item-category" placeholder="Category" style="margin-bottom:10px"/>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="addItem()">Add</button>
+        <button class="btn btn-outline btn-sm" onclick="hideAddItem()">Cancel</button>
+      </div>
+    </div>
+    <div class="card" id="detail-items"></div>
+  </div>
+</div>
+
+<!-- ROOM -->
+<div class="screen" id="screen-room">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="nav('home')">←</button>
+      <span class="topbar-title">Your Space</span>
+    </div>
+  </div>
+  <div style="padding:20px">
+    <div class="room-upload" id="room-upload-area">
+      <div class="room-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a1916" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:6px">Upload a photo of your space</div>
+      <div style="font-size:13px;color:#9a9690;margin-bottom:20px;line-height:1.6">Place décor items and preview your setup before committing to any purchase.</div>
+      <label class="upload-label">Choose Photo<input type="file" accept="image/*" style="display:none" onchange="handleRoomUpload(event)"/></label>
+      <div style="margin-top:10px"><button style="background:none;border:none;font-size:13px;color:#9a9690;cursor:pointer;text-decoration:underline;font-family:inherit" onclick="useSampleRoom()">Use sample room</button></div>
+    </div>
+    <div id="room-uploaded" style="display:none">
+      <img id="room-img" style="width:100%;border-radius:10px;margin-bottom:16px;max-height:220px;object-fit:cover"/>
+      <div style="font-size:13px;color:#3d6b4f;font-weight:500;margin-bottom:12px;text-align:center">Room uploaded</div>
+      <button class="btn btn-primary btn-full" onclick="nav('preview')">Style This Room</button>
+    </div>
+    <div style="margin-top:24px" id="room-tips">
+      <div class="section-label">Tips</div>
+      <div style="display:flex;gap:12px;margin-bottom:10px"><span style="font-weight:600;color:#9a9690;font-size:13px;flex-shrink:0">1.</span><span style="font-size:13px;color:#9a9690;line-height:1.5">Stand in the corner of your room for full coverage</span></div>
+      <div style="display:flex;gap:12px;margin-bottom:10px"><span style="font-weight:600;color:#9a9690;font-size:13px;flex-shrink:0">2.</span><span style="font-size:13px;color:#9a9690;line-height:1.5">Make sure the room is well-lit</span></div>
+      <div style="display:flex;gap:12px"><span style="font-weight:600;color:#9a9690;font-size:13px;flex-shrink:0">3.</span><span style="font-size:13px;color:#9a9690;line-height:1.5">Take multiple angles for a better preview</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PREVIEW -->
+<div class="screen" id="screen-preview">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="nav('room')">←</button>
+      <span class="topbar-title">Style Your Space</span>
+    </div>
+    <button class="btn btn-primary btn-sm" id="cart-btn" style="display:none" onclick="nav('shopping')">Cart (<span id="cart-count">0</span>)</button>
+  </div>
+  <div class="preview-canvas" id="preview-canvas">
+    <div style="text-align:center">
+      <div style="font-size:12px;color:#9a9690;margin-bottom:6px">Room preview</div>
+      <div style="font-size:12px;color:#e8e6e1">Place items from your wishlists below</div>
+    </div>
+  </div>
+  <div style="padding:0 20px">
+    <div class="cat-scroll" id="preview-list-filter"></div>
+    <div class="card" id="preview-items"></div>
+  </div>
+</div>
+
+<!-- SHOPPING -->
+<div class="screen" id="screen-shopping">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="back-btn" onclick="nav('preview')">←</button>
+      <span class="topbar-title">Shopping List</span>
+    </div>
+  </div>
+  <div style="background:#fff;border-bottom:1px solid #e8e6e1;padding:16px 20px" id="budget-section"></div>
+  <div class="stats-row" id="shopping-stats"></div>
+  <div style="padding:16px 20px"><div class="card" id="shopping-items"></div></div>
+</div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="nav('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    <span class="nav-label">Home</span>
+  </button>
+  <button class="nav-btn" id="nav-discover" onclick="nav('discover')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span class="nav-label">Discover</span>
+  </button>
+  <button class="nav-btn" id="nav-room" onclick="nav('room')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    <span class="nav-label">Room</span>
+  </button>
+  <button class="nav-btn" id="nav-wishlists" onclick="nav('wishlists')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    <span class="nav-label">Wishlists</span>
+  </button>
+  <button class="nav-btn" id="nav-shopping" onclick="nav('shopping')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    <span class="nav-label">Shop</span>
+  </button>
+</nav>
+
+<script>
+const WISHLISTS = [
+  {id:1,name:"Summer Garden Party",event:"June 15",items:[
+    {id:1,name:"Rattan Lantern Set",price:34.99,store:"Wayfair",category:"Lighting"},
+    {id:2,name:"White Linen Tablecloth",price:22.00,store:"Target",category:"Linens"},
+    {id:3,name:"Eucalyptus Garland",price:18.50,store:"Amazon",category:"Florals"},
+    {id:4,name:"Pillar Candles (6pk)",price:15.99,store:"HomeGoods",category:"Lighting"}
+  ]},
+  {id:2,name:"Holiday Dinner",event:"Dec 20",items:[
+    {id:5,name:"Gold Charger Plates",price:29.99,store:"Amazon",category:"Tableware"},
+    {id:6,name:"Pine Centerpiece",price:45.00,store:"Pottery Barn",category:"Florals"},
+    {id:7,name:"Velvet Table Runner",price:19.99,store:"Target",category:"Linens"}
+  ]},
+  {id:3,name:"Bachelorette Brunch",event:"Aug 3",items:[
+    {id:8,name:"Blush Balloon Arch Kit",price:27.99,store:"Amazon",category:"Decor"},
+    {id:9,name:"Floral Napkin Rings",price:14.99,store:"Wayfair",category:"Tableware"}
+  ]}
+];
+
+const INSPO = [
+  {id:1,category:"Garden Party",title:"Wildflower Table",colors:["#d4e8c2","#f5f0e8","#b8d4a8"],tags:["Florals","Outdoor","Linen"]},
+  {id:2,category:"Garden Party",title:"Lantern Canopy",colors:["#f5e6c8","#e8d5a0","#f0efe8"],tags:["Lighting","Warm","Evening"]},
+  {id:3,category:"Holiday Dinner",title:"Deep Winter Table",colors:["#2d3a2e","#8b9e6e","#f5f0e8"],tags:["Dark","Moody","Greenery"]},
+  {id:4,category:"Holiday Dinner",title:"Gold & Ivory",colors:["#e8d5a0","#f5f0e8","#c8b870"],tags:["Elegant","Gold","Classic"]},
+  {id:5,category:"Bridal",title:"Garden Romance",colors:["#f5e8e8","#e8d0d0","#f0efe8"],tags:["Blush","Soft","Florals"]},
+  {id:6,category:"Bridal",title:"Modern White",colors:["#f5f5f3","#e8e6e1","#d4d0c8"],tags:["Minimal","White","Clean"]},
+  {id:7,category:"Birthday",title:"Warm Terracotta",colors:["#d4856a","#e8b090","#f5e8dc"],tags:["Warm","Earthy","Bold"]},
+  {id:8,category:"Birthday",title:"Monochrome Black",colors:["#1a1916","#3a3835","#5a5852"],tags:["Dramatic","Bold","Modern"]},
+  {id:9,category:"Brunch",title:"Linen & Sage",colors:["#8fa882","#c8d8c0","#f5f0e8"],tags:["Fresh","Natural","Morning"]},
+  {id:10,category:"Brunch",title:"Citrus Pop",colors:["#e8c850","#f5a830","#f5f0e8"],tags:["Bright","Fun","Summer"]},
+  {id:11,category:"Minimalist",title:"Stone & White",colors:["#e8e6e1","#d0cdc8","#f5f5f3"],tags:["Minimal","Neutral","Clean"]},
+  {id:12,category:"Minimalist",title:"Warm Neutrals",colors:["#e8ddd0","#d4c8b8","#c0b4a0"],tags:["Earthy","Calm","Soft"]}
+];
+
+const CATS = ["All","Garden Party","Holiday Dinner","Bridal","Birthday","Brunch","Minimalist"];
+
+let state = {
+  currentScreen: 'home',
+  savedInspo: [],
+  wishlists: JSON.parse(JSON.stringify(WISHLISTS)),
+  activeListIdx: 0,
+  placedItems: [],
+  activeFilter: 'all',
+  bought: [],
+  budget: '',
+  editingBudget: false,
+  activeCategory: 'All',
+  roomUploaded: false
+};
+
+function nav(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('screen-' + screen.replace('wishlist-detail','wishlist-detail')).classList.add('active');
+  const nb = document.getElementById('nav-' + screen);
+  if (nb) nb.classList.add('active');
+  state.currentScreen = screen;
+  if (screen === 'discover') renderDiscover();
+  if (screen === 'moodboard') renderMoodboard();
+  if (screen === 'wishlists') renderWishlists();
+  if (screen === 'wishlist-detail') renderDetail();
+  if (screen === 'preview') renderPreview();
+  if (screen === 'shopping') renderShopping();
+  if (screen === 'home') updateHome();
+  document.getElementById('app').scrollTo(0,0);
+}
+
+function updateHome() {
+  const c = state.savedInspo.length;
+  document.getElementById('home-saved-count').textContent = c + ' saved ' + (c===1?'look':'looks');
+}
+
+function renderDiscover() {
+  const scroll = document.getElementById('cat-scroll');
+  scroll.innerHTML = CATS.map(c => `<button class="cat-btn${state.activeCategory===c?' active':''}" onclick="setCategory('${c}')">${c}</button>`).join('');
+  const filtered = state.activeCategory === 'All' ? INSPO : INSPO.filter(i => i.category === state.activeCategory);
+  const sc = document.getElementById('moodboard-shortcut');
+  if (state.savedInspo.length > 0) {
+    sc.style.display = 'flex';
+    document.getElementById('shortcut-count').textContent = state.savedInspo.length + ' saved ' + (state.savedInspo.length===1?'look':'looks');
+  } else { sc.style.display = 'none'; }
+  document.getElementById('inspo-grid').innerHTML = filtered.map(item => {
+    const saved = state.savedInspo.find(s => s.id === item.id);
+    return `<div class="inspo-card">
+      <div class="inspo-swatch">${item.colors.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+      <div class="inspo-body">
+        <div class="inspo-title">${item.title}</div>
+        <div class="inspo-cat">${item.category}</div>
+        <div style="margin-bottom:8px">${item.tags.slice(0,2).map(t=>`<span class="tag" style="margin-right:4px">${t}</span>`).join('')}</div>
+        <button class="save-btn${saved?' saved':''}" onclick="toggleSave(${item.id})">${saved?'Saved':'Save'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setCategory(cat) {
+  state.activeCategory = cat;
+  renderDiscover();
+}
+
+function toggleSave(id) {
+  const item = INSPO.find(i => i.id === id);
+  if (state.savedInspo.find(s => s.id === id)) {
+    state.savedInspo = state.savedInspo.filter(s => s.id !== id);
+  } else {
+    state.savedInspo.push(item);
+  }
+  renderDiscover();
+  updateHome();
+}
+
+function renderMoodboard() {
+  const el = document.getElementById('moodboard-content');
+  if (state.savedInspo.length === 0) {
+    el.innerHTML = `<div style="text-align:center;padding:48px 20px"><div style="font-size:13px;color:#9a9690;margin-bottom:16px">No saved looks yet. Browse Discover to save inspiration.</div><button class="btn btn-outline" onclick="nav('discover')">Browse inspiration</button></div>`;
+    return;
+  }
+  el.innerHTML = `<div style="font-size:11px;color:#9a9690;margin-bottom:16px">${state.savedInspo.length} saved ${state.savedInspo.length===1?'look':'looks'}</div>
+  <div class="inspo-grid">${state.savedInspo.map(item => `<div class="inspo-card">
+    <div class="inspo-swatch">${item.colors.map(c=>`<div style="background:${c}"></div>`).join('')}</div>
+    <div class="inspo-body">
+      <div class="inspo-title">${item.title}</div>
+      <div class="inspo-cat">${item.category}</div>
+      <div style="margin-bottom:8px">${item.tags.slice(0,2).map(t=>`<span class="tag" style="margin-right:4px">${t}</span>`).join('')}</div>
+      <button class="save-btn" onclick="removeInspo(${item.id})">Remove</button>
+    </div>
+  </div>`).join('')}</div>`;
+}
+
+function removeInspo(id) {
+  state.savedInspo = state.savedInspo.filter(s => s.id !== id);
+  renderMoodboard();
+  updateHome();
+}
+
+function renderWishlists() {
+  const el = document.getElementById('wishlists-container');
+  el.innerHTML = state.wishlists.map((list, i) => `
+    <div onclick="openList(${i})" style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;${i<state.wishlists.length-1?'border-bottom:1px solid #e8e6e1':''}">
+      <div style="flex:1">
+        <div style="font-weight:500;font-size:14px">${list.name}</div>
+        <div style="font-size:12px;color:#9a9690;margin-top:2px">${list.items.length} items · ${list.event}</div>
+        <div style="margin-top:8px">${[...new Set(list.items.map(i=>i.category))].slice(0,3).map(c=>`<span class="tag" style="margin-right:4px">${c}</span>`).join('')}</div>
+      </div>
+      <span style="color:#9a9690;font-size:18px;margin-left:12px">›</span>
+    </div>`).join('');
+}
+
+function openList(idx) {
+  state.activeListIdx = idx;
+  nav('wishlist-detail');
+}
+
+function renderDetail() {
+  const list = state.wishlists[state.activeListIdx];
+  if (!list) return;
+  document.getElementById('detail-title').textContent = list.name;
+  const total = list.items.reduce((s,i)=>s+i.price,0);
+  const cats = [...new Set(list.items.map(i=>i.category))].length;
+  document.getElementById('detail-stats').innerHTML = [['Items',list.items.length],['Est. Total','$'+total.toFixed(2)],['Categories',cats]].map(([l,v])=>`<div class="stat"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('');
+  document.getElementById('detail-items').innerHTML = list.items.map((item,i)=>`
+    <div style="padding:14px 18px;display:flex;align-items:center;gap:14px;${i<list.items.length-1?'border-bottom:1px solid #e8e6e1':''}">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:500;font-size:14px">${item.name}</div>
+        <div style="font-size:12px;color:#9a9690;margin-top:2px">${item.store}</div>
+        <div style="margin-top:6px"><span class="tag">${item.category}</span></div>
+      </div>
+      <div class="price">$${item.price.toFixed(2)}</div>
+    </div>`).join('');
+}
+
+function showNewList() { document.getElementById('new-list-form').style.display='block'; }
+function hideNewList() { document.getElementById('new-list-form').style.display='none'; }
+function createList() {
+  const val = document.getElementById('new-list-input').value.trim();
+  if (val) { state.wishlists.push({id:Date.now(),name:val,event:'TBD',items:[]}); document.getElementById('new-list-input').value=''; hideNewList(); renderWishlists(); }
+}
+function showAddItem() { document.getElementById('add-item-form').style.display='block'; }
+function hideAddItem() { document.getElementById('add-item-form').style.display='none'; }
+function addItem() {
+  const name = document.getElementById('item-name').value.trim();
+  if (!name) return;
+  const item = {id:Date.now(),name,price:parseFloat(document.getElementById('item-price').value)||0,store:document.getElementById('item-store').value||'',category:document.getElementById('item-category').value||'Other'};
+  state.wishlists[state.activeListIdx].items.push(item);
+  ['item-name','item-price','item-store','item-category'].forEach(id=>document.getElementById(id).value='');
+  hideAddItem(); renderDetail();
+}
+
+function handleRoomUpload(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => { document.getElementById('room-img').src = ev.target.result; showRoomUploaded(); };
+  r.readAsDataURL(f);
+}
+function useSampleRoom() { document.getElementById('room-img').src=''; showRoomUploaded(); }
+function showRoomUploaded() {
+  document.getElementById('room-upload-area').style.display='none';
+  document.getElementById('room-uploaded').style.display='block';
+  document.getElementById('room-tips').style.display='none';
+  state.roomUploaded = true;
+}
+
+function renderPreview() {
+  const allItems = state.wishlists.flatMap(l=>l.items);
+  const lists = ['all',...state.wishlists.map(l=>l.name)];
+  const filter = document.getElementById('preview-list-filter');
+  filter.innerHTML = lists.map(l=>`<button class="cat-btn${state.activeFilter===(l==='all'?'all':l)?' active':''}" onclick="setPreviewFilter('${l}')">${l==='all'?'All':l}</button>`).join('');
+  const filtered = state.activeFilter==='all' ? allItems : (state.wishlists.find(l=>l.name===state.activeFilter)?.items||[]);
+  document.getElementById('preview-items').innerHTML = filtered.map((item,i)=>{
+    const placed = state.placedItems.find(x=>x.id===item.id);
+    return `<div class="item-row"${i<filtered.length-1?' style="border-bottom:1px solid #e8e6e1"':''}>
+      <div style="flex:1"><div class="item-name">${item.name}</div><div class="item-sub">${item.store} · $${item.price.toFixed(2)}</div></div>
+      <button class="place-btn${placed?' placed':''}" onclick="togglePlace(${item.id})">${placed?'Placed':'Place'}</button>
+    </div>`;
+  }).join('');
+  updatePreviewCanvas();
+  const cc = state.placedItems.length;
+  const cb = document.getElementById('cart-btn');
+  cb.style.display = cc>0?'block':'none';
+  document.getElementById('cart-count').textContent = cc;
+}
+
+function setPreviewFilter(f) { state.activeFilter = f==='all'?'all':f; renderPreview(); }
+
+function togglePlace(id) {
+  const allItems = state.wishlists.flatMap(l=>l.items);
+  const item = allItems.find(i=>i.id===id);
+  if (state.placedItems.find(x=>x.id===id)) { state.placedItems = state.placedItems.filter(x=>x.id!==id); }
+  else { state.placedItems.push(item); }
+  renderPreview();
+}
+
+function updatePreviewCanvas() {
+  const canvas = document.getElementById('preview-canvas');
+  let badge = canvas.querySelector('.placed-badge');
+  let tags = canvas.querySelector('.placed-tags');
+  if (!badge) { badge = document.createElement('div'); badge.className='placed-badge'; canvas.appendChild(badge); }
+  if (!tags) { tags = document.createElement('div'); tags.className='placed-tags'; canvas.appendChild(tags); }
+  if (state.placedItems.length > 0) {
+    badge.style.display='block'; badge.textContent=state.placedItems.length+' placed';
+    tags.innerHTML = state.placedItems.map(i=>`<span class="placed-tag">${i.name}</span>`).join('');
+  } else { badge.style.display='none'; tags.innerHTML=''; }
+}
+
+function renderShopping() {
+  const allItems = state.wishlists.flatMap(l=>l.items);
+  const total = allItems.reduce((s,i)=>s+i.price,0);
+  const remaining = allItems.filter(i=>!state.bought.includes(i.id)).reduce((s,i)=>s+i.price,0);
+  const budgetNum = parseFloat(state.budget)||0;
+  const over = budgetNum>0 && total>budgetNum;
+  const used = budgetNum>0 ? Math.min((total/budgetNum)*100,100) : 0;
+  const bs = document.getElementById('budget-section');
+  if (state.editingBudget) {
+    bs.innerHTML = `<div class="section-label">Set Budget</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div style="position:relative;flex:1"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;color:#9a9690">$</span>
+      <input id="budget-input" type="number" value="${state.budget}" placeholder="0.00" style="padding-left:22px" autofocus/></div>
+      <button class="btn btn-primary btn-sm" onclick="saveBudget()">Save</button>
+      <button class="btn btn-outline btn-sm" onclick="cancelBudget()">Cancel</button>
+    </div>`;
+  } else {
+    bs.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center${budgetNum>0?';margin-bottom:12px':''}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:#9a9690">Budget</span>
+        ${budgetNum>0?`<span style="font-weight:600;font-size:15px;color:${over?'#b45309':'#3d6b4f'}">$${budgetNum.toFixed(2)}</span>`:`<span style="font-size:12px;color:#9a9690;font-style:italic">Not set</span>`}
+      </div>
+      <button style="background:none;border:none;font-size:12px;color:#9a9690;cursor:pointer;text-decoration:underline;font-family:inherit" onclick="editBudget()">${budgetNum>0?'Edit':'Set budget'}</button>
+    </div>
+    ${budgetNum>0?`<div class="budget-bar"><div class="budget-fill" style="width:${used}%;background:${over?'#b45309':'#3d6b4f'}"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#9a9690">
+      <span>List total <span style="color:${over?'#b45309':'#1a1916'};font-weight:500">$${total.toFixed(2)}</span></span>
+      ${over?`<span style="color:#b45309;font-weight:500">$${(total-budgetNum).toFixed(2)} over budget</span>`:`<span style="color:#3d6b4f;font-weight:500">$${(budgetNum-total).toFixed(2)} remaining</span>`}
+    </div>`:''}`;
+  }
+  document.getElementById('shopping-stats').innerHTML = [['Items',allItems.length],['To Buy','$'+remaining.toFixed(2)],['Done',state.bought.length+'/'+allItems.length]].map(([l,v])=>`<div class="stat"><div class="stat-val">${v}</div><div class="stat-label">${l}</div></div>`).join('');
+  document.getElementById('shopping-items').innerHTML = allItems.map((item,i)=>{
+    const done = state.bought.includes(item.id);
+    return `<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;opacity:${done?0.45:1};${i<allItems.length-1?'border-bottom:1px solid #e8e6e1':''}">
+      <button class="check-btn${done?' done':''}" onclick="toggleBought(${item.id})">${done?`<svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</button>
+      <div style="flex:1;min-width:0"><div style="font-weight:500;font-size:13px;text-decoration:${done?'line-through':'none'}">${item.name}</div><div style="font-size:11px;color:#9a9690;margin-top:1px">${item.store}</div></div>
+      <div style="text-align:right;flex-shrink:0"><div class="price">$${item.price.toFixed(2)}</div><a href="#" style="font-size:11px;color:#9a9690;text-decoration:underline">Buy</a></div>
+    </div>`;
+  }).join('');
+}
+
+function editBudget() { state.editingBudget=true; renderShopping(); setTimeout(()=>{ const el=document.getElementById('budget-input'); if(el) el.focus(); },100); }
+function cancelBudget() { state.editingBudget=false; renderShopping(); }
+function saveBudget() { state.budget=document.getElementById('budget-input').value; state.editingBudget=false; renderShopping(); }
+function toggleBought(id) { if(state.bought.includes(id)) state.bought=state.bought.filter(x=>x!==id); else state.bought.push(id); renderShopping(); }
+
+updateHome();
+</script>
+</body>
+</html>
