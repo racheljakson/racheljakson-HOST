@@ -244,11 +244,14 @@ input:focus{outline:none;border-color:#1a1916}
     </div>
     <button class="btn btn-primary btn-sm" id="cart-btn" style="display:none" onclick="nav('shopping')">Cart (<span id="cart-count">0</span>)</button>
   </div>
-  <div class="preview-canvas" id="preview-canvas">
-    <div style="text-align:center">
-      <div style="font-size:12px;color:#9a9690;margin-bottom:6px">Room preview</div>
-      <div style="font-size:12px;color:#e8e6e1">Place items from your wishlists below</div>
+  <div style="margin:16px 20px 8px;border-radius:12px;border:1px solid #e8e6e1;overflow:hidden;position:relative;background:#f0efe8;" id="preview-canvas-wrap">
+    <div id="preview-canvas" style="position:relative;width:100%;min-height:220px;display:flex;align-items:center;justify-content:center;">
+      <div id="preview-placeholder" style="text-align:center;padding:20px">
+        <div style="font-size:12px;color:#9a9690;margin-bottom:4px">Room preview</div>
+        <div style="font-size:11px;color:#e8e6e1">Place items below to see them here</div>
+      </div>
     </div>
+    <div style="padding:6px 10px;background:#fff;border-top:1px solid #e8e6e1;font-size:11px;color:#9a9690">Drag items to reposition · Pinch to resize</div>
   </div>
   <div style="padding:0 20px">
     <div class="cat-scroll" id="preview-list-filter"></div>
@@ -489,13 +492,15 @@ function handleRoomUpload(e) {
   r.onload = ev => { document.getElementById('room-img').src = ev.target.result; showRoomUploaded(); };
   r.readAsDataURL(f);
 }
-function useSampleRoom() { document.getElementById('room-img').src=''; showRoomUploaded(); }
+function useSampleRoom() { state.roomImg = null; showRoomUploaded(); }
 function showRoomUploaded() {
   document.getElementById('room-upload-area').style.display='none';
   document.getElementById('room-uploaded').style.display='block';
   document.getElementById('room-tips').style.display='none';
   state.roomUploaded = true;
 }
+
+const PRODUCT_COLORS = ['#d4856a','#8fa882','#e8d5a0','#b8d4a8','#d4c8b8','#9a9690','#c8b870','#8b9e6e','#e8b090','#c0b4a0'];
 
 function renderPreview() {
   const allItems = state.wishlists.flatMap(l=>l.items);
@@ -506,14 +511,13 @@ function renderPreview() {
   document.getElementById('preview-items').innerHTML = filtered.map((item,i)=>{
     const placed = state.placedItems.find(x=>x.id===item.id);
     return `<div class="item-row"${i<filtered.length-1?' style="border-bottom:1px solid #e8e6e1"':''}>
-      <div style="flex:1"><div class="item-name">${item.name}</div><div class="item-sub">${item.store} · $${item.price.toFixed(2)}</div></div>
-      <button class="place-btn${placed?' placed':''}" onclick="togglePlace(${item.id})">${placed?'Placed':'Place'}</button>
+      <div style="flex:1"><div class="item-name">${item.name}</div><div class="item-sub">${item.store} · ${item.price.toFixed(2)}</div></div>
+      <button class="place-btn${placed?' placed':''}" onclick="togglePlace(${item.id})">${placed?'Remove':'Place'}</button>
     </div>`;
   }).join('');
   updatePreviewCanvas();
   const cc = state.placedItems.length;
-  const cb = document.getElementById('cart-btn');
-  cb.style.display = cc>0?'block':'none';
+  document.getElementById('cart-btn').style.display = cc>0?'block':'none';
   document.getElementById('cart-count').textContent = cc;
 }
 
@@ -522,21 +526,115 @@ function setPreviewFilter(f) { state.activeFilter = f==='all'?'all':f; renderPre
 function togglePlace(id) {
   const allItems = state.wishlists.flatMap(l=>l.items);
   const item = allItems.find(i=>i.id===id);
-  if (state.placedItems.find(x=>x.id===id)) { state.placedItems = state.placedItems.filter(x=>x.id!==id); }
-  else { state.placedItems.push(item); }
+  if (state.placedItems.find(x=>x.id===id)) {
+    state.placedItems = state.placedItems.filter(x=>x.id!==id);
+    const el = document.getElementById('placed-item-'+id);
+    if (el) el.remove();
+  } else {
+    state.placedItems.push(item);
+    addDraggableItem(item);
+  }
   renderPreview();
 }
 
 function updatePreviewCanvas() {
+  const ph = document.getElementById('preview-placeholder');
+  if (ph) ph.style.display = state.placedItems.length===0?'block':'none';
   const canvas = document.getElementById('preview-canvas');
-  let badge = canvas.querySelector('.placed-badge');
-  let tags = canvas.querySelector('.placed-tags');
-  if (!badge) { badge = document.createElement('div'); badge.className='placed-badge'; canvas.appendChild(badge); }
-  if (!tags) { tags = document.createElement('div'); tags.className='placed-tags'; canvas.appendChild(tags); }
-  if (state.placedItems.length > 0) {
-    badge.style.display='block'; badge.textContent=state.placedItems.length+' placed';
-    tags.innerHTML = state.placedItems.map(i=>`<span class="placed-tag">${i.name}</span>`).join('');
-  } else { badge.style.display='none'; tags.innerHTML=''; }
+  if (state.roomImg) {
+    let img = canvas.querySelector('img.room-bg');
+    if (!img) {
+      img = document.createElement('img');
+      img.className = 'room-bg';
+      img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:0;z-index:0';
+      canvas.insertBefore(img, canvas.firstChild);
+      canvas.style.minHeight = '220px';
+    }
+    img.src = state.roomImg;
+  }
+}
+
+function addDraggableItem(item) {
+  const canvas = document.getElementById('preview-canvas');
+  const colorIdx = item.id % PRODUCT_COLORS.length;
+  const color = PRODUCT_COLORS[colorIdx];
+  const wrap = document.createElement('div');
+  wrap.id = 'placed-item-' + item.id;
+  const startX = 20 + Math.random() * 40;
+  const startY = 20 + Math.random() * 30;
+  wrap.style.cssText = `position:absolute;left:${startX}%;top:${startY}%;z-index:10;cursor:grab;user-select:none;touch-action:none;`;
+  wrap.innerHTML = `
+    <div style="background:${color};border-radius:10px;padding:8px 12px;min-width:70px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.15)">
+      <div style="width:40px;height:40px;background:rgba(255,255,255,0.3);border-radius:8px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+      <div style="font-size:10px;font-weight:600;color:#fff;white-space:nowrap;max-width:80px;overflow:hidden;text-overflow:ellipsis">${item.name}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.8);margin-top:1px">${item.price.toFixed(2)}</div>
+    </div>`;
+  canvas.appendChild(wrap);
+  makeDraggable(wrap, canvas);
+  makePinchResizable(wrap);
+}
+
+function makeDraggable(el, container) {
+  let startX, startY, startLeft, startTop;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    el.style.cursor = 'grabbing';
+    const t = e.touches[0];
+    const rect = container.getBoundingClientRect();
+    startX = t.clientX; startY = t.clientY;
+    startLeft = (parseFloat(el.style.left)/100)*rect.width;
+    startTop = (parseFloat(el.style.top)/100)*rect.height;
+  }, {passive:false});
+  el.addEventListener('touchmove', e => {
+    if (e.touches.length !== 1) return;
+    e.preventDefault();
+    const t = e.touches[0];
+    const rect = container.getBoundingClientRect();
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    const newL = Math.max(0, Math.min(rect.width - el.offsetWidth, startLeft + dx));
+    const newT = Math.max(0, Math.min(rect.height - el.offsetHeight, startTop + dy));
+    el.style.left = (newL/rect.width*100)+'%';
+    el.style.top = (newT/rect.height*100)+'%';
+  }, {passive:false});
+  el.addEventListener('touchend', () => { el.style.cursor='grab'; });
+  el.addEventListener('mousedown', e => {
+    e.preventDefault();
+    el.style.cursor='grabbing';
+    const rect = container.getBoundingClientRect();
+    startX=e.clientX; startY=e.clientY;
+    startLeft=(parseFloat(el.style.left)/100)*rect.width;
+    startTop=(parseFloat(el.style.top)/100)*rect.height;
+    const onMove = e => {
+      const rect2 = container.getBoundingClientRect();
+      const dx=e.clientX-startX, dy=e.clientY-startY;
+      const newL=Math.max(0,Math.min(rect2.width-el.offsetWidth,startLeft+dx));
+      const newT=Math.max(0,Math.min(rect2.height-el.offsetHeight,startTop+dy));
+      el.style.left=(newL/rect2.width*100)+'%';
+      el.style.top=(newT/rect2.height*100)+'%';
+    };
+    const onUp = () => { el.style.cursor='grab'; document.removeEventListener('mousemove',onMove); document.removeEventListener('mouseup',onUp); };
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+}
+
+function makePinchResizable(el) {
+  let initDist=0, initScale=1, curScale=1;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length===2) { initDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); initScale=curScale; }
+  }, {passive:true});
+  el.addEventListener('touchmove', e => {
+    if (e.touches.length===2) {
+      e.preventDefault();
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+      curScale=Math.max(0.5,Math.min(3,initScale*(d/initDist)));
+      el.style.transform=`scale(${curScale})`;
+      el.style.transformOrigin='top left';
+    }
+  }, {passive:false});
 }
 
 function renderShopping() {
